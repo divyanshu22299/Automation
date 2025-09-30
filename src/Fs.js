@@ -301,6 +301,16 @@ const exportWord = async () => {
         value={f || new Date().toISOString().split("T")[0]}   // default today
         onChange={(e) => handleFieldChange(idx, e.target.value)}
       />
+    ) : fieldNames[idx] === "Complexity" ? (
+      <select
+        value={f}
+        onChange={(e) => handleFieldChange(idx, e.target.value)}
+      >
+        <option value="">Select</option>
+        <option value="Low">Low</option>
+        <option value="Medium">Medium</option>
+        <option value="High">High</option>
+      </select>
     ) : (
       <input
         value={f}
@@ -310,6 +320,7 @@ const exportWord = async () => {
     )}
   </div>
 ))}
+
 
 
             {["before", "after"].map((type) => (
