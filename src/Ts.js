@@ -19,7 +19,7 @@ window.Buffer = require("buffer/").Buffer;
 
 export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
   const navigate = useNavigate();
-  const [title, setTitle] = useState("Functional Requirement");
+  const [title, setTitle] = useState("Technical Specification");
 
 
   const fieldNames = [
@@ -160,27 +160,7 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     saveAs(blob, `${(title || "functional_spec").replace(/\s+/g, "_")}.md`);
   };
 
-  const copyMarkdown = async () => {
-    let md = `# ${title}\n\n`;
-    fields.forEach((f, i) => {
-      if (i === 12) {
-        md += `## ${fieldNames[i]}\n\n`;
-        images.length
-          ? images.forEach(
-              (img, idx) => (md += `![Image ${idx + 1}](${img})\n\n`)
-            )
-          : (md += "_(no images)_\n\n");
-      } else {
-        md += `## ${fieldNames[i]}\n\n${f || "_(empty)_"}\n\n`;
-      }
-    });
-    try {
-      await navigator.clipboard.writeText(md);
-      alert("Markdown copied to clipboard");
-    } catch (e) {
-      alert("Copy failed — your browser may block clipboard access");
-    }
-  };
+  
 
   const fillSample = () => {
     setFields((prev) =>
@@ -291,7 +271,7 @@ fieldNames.forEach((name, idx) => {
           </button>
         </div>
         <div>
-          <h1>Functional Spec Builder</h1>
+          <h1>Technical Specification Builder</h1>
           <div className="subtitle">
             Create, preview & export your functional specs
           </div>
@@ -343,7 +323,18 @@ fieldNames.forEach((name, idx) => {
               <div key={idx} className="fs-field">
                 <label className="field-label">{name}</label>
 
-                {name === "Code Images" ? (
+{ name === "Complexity of Object" ? (
+  <select
+    value={fields[idx]}
+    onChange={(e) => handleFieldChange(idx, e.target.value)}
+  >
+    <option value="">Select</option>
+    <option value="Low">Low</option>
+    <option value="Medium">Medium</option>
+    <option value="High">High</option>
+  </select>
+
+ ) : name === "Code Images" ? (
                   <div
                     className="image-upload"
                     ref={pasteBoxRef}
@@ -485,13 +476,7 @@ fieldNames.forEach((name, idx) => {
                 className="btn-icon"
                 onClick={exportMarkdown}
               >
-                <FaRegFileAlt className="icon-anim" /> Export MD
-              </button>
-              <button
-                type="button"
-                className="btn-icon"
-                onClick={copyMarkdown}
-              >
+
                 <FaClipboard className="icon-anim" /> Copy MD
               </button>
               <button
