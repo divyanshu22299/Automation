@@ -50,18 +50,8 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
 
   const [fields, setFields] = useState(() => {
   try {
-    const raw = localStorage.getItem("fs_fields_v3");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      const arr = Array.isArray(parsed.fields)
-        ? [...parsed.fields.slice(0, fieldNames.length), ...Array(fieldNames.length - parsed.fields.length).fill("")]
-        : Array(fieldNames.length).fill("");
-      const dateIdx = fieldNames.indexOf("Date");
-      if (dateIdx !== -1 && !arr[dateIdx]) {
-        arr[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default today
-      }
-      return arr;
-    }
+    localStorage.removeItem("fs_fields_v3");
+
   } catch {}
   const init = Array(fieldNames.length).fill("");
   const dateIdx = fieldNames.indexOf("Date");
@@ -313,18 +303,29 @@ const clearAll = () => {
                 <label className="field-label">{fieldNames[idx]}</label>
 
                 {fieldNames[idx] === "Date" ? (
-                  <input
-  type="date"
-  value={f}
-  onChange={(e) => handleFieldChange(idx, e.target.value)}
-/>
-                ) : (
-                  <input
-                    value={f}
-                    onChange={(e) => handleFieldChange(idx, e.target.value)}
-                    placeholder={fieldNames[idx]}
-                  />
-                )}
+  <input
+    type="date"
+    value={f}
+    onChange={(e) => handleFieldChange(idx, e.target.value)}
+  />
+) : fieldNames[idx] === "Complexity of Object" ? (
+  <select
+    value={f}
+    onChange={(e) => handleFieldChange(idx, e.target.value)}
+  >
+    <option value="">Select</option>
+    <option value="Low">Low</option>
+    <option value="Medium">Medium</option>
+    <option value="High">High</option>
+  </select>
+) : (
+  <input
+    value={f}
+    onChange={(e) => handleFieldChange(idx, e.target.value)}
+    placeholder={fieldNames[idx]}
+  />
+)}
+
               </div>
             ))}
 

@@ -224,8 +224,8 @@ const exportWord = async () => {
     });
 
     // Use placeholder if no image
-    data["Before screenshot"] = beforeImages[0] || placeholder;
-    data["After screenshot"] = afterImages[0] || placeholder;
+    data["Screenshot 1"] = beforeImages[0] || placeholder;
+    data["Screenshot 2"] = afterImages[0] || placeholder;
 
     await doc.renderAsync(data);
 
@@ -383,11 +383,11 @@ const exportWord = async () => {
             <ol>
               {fields.map((f, i) => <li key={i}>{f || <em>No description</em>}</li>)}
               <li>
-                <strong>Before screenshot:</strong>{" "}
+                <strong>Screenshot 1:</strong>{" "}
                 {beforeImages.length ? beforeImages.map((img, idx) => <img key={idx} src={img} alt={`before-${idx}`} style={{ maxWidth: "100px" }} />) : <em>No images</em>}
               </li>
               <li>
-                <strong>After screenshot:</strong>{" "}
+                <strong>Screenshot 2:</strong>{" "}
                 {afterImages.length ? afterImages.map((img, idx) => <img key={idx} src={img} alt={`after-${idx}`} style={{ maxWidth: "100px" }} />) : <em>No images</em>}
               </li>
             </ol>

@@ -271,7 +271,7 @@ fieldNames.forEach((name, idx) => {
           </button>
         </div>
         <div>
-          <h1>Technical Specification Builder</h1>
+          <h1>Technical Specification</h1>
           <div className="subtitle">
             Create, preview & export your functional specs
           </div>
@@ -534,7 +534,7 @@ fieldNames.forEach((name, idx) => {
         </aside>
       </main>
 
-      <footer className="Ts-footer">© 2025 Automation Tool</footer>
+<footer className="fs-footer">© 2025 Automation Tool</footer>
     </div>
   );
 }
