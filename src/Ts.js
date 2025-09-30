@@ -39,45 +39,33 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     "Change description",
   ];
 
-  const [fields, setFields] = useState(() => {
-    try {
-      const raw = localStorage.getItem("Ts_fields_v3");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed.fields)
-          ? [
-              ...parsed.fields.slice(0, fieldNames.length),
-              ...Array(fieldNames.length - parsed.fields.length).fill(""),
-            ]
-          : Array(fieldNames.length).fill("");
-      }
-    } catch (e) {}
-    return Array(fieldNames.length).fill("");
-  });
+ const [fields, setFields] = useState(() => {
+  try {
+    const raw = localStorage.getItem("Ts_fields_v3");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      const arr = Array.isArray(parsed.fields)
+        ? [...parsed.fields.slice(0, fieldNames.length), ...Array(fieldNames.length - parsed.fields.length).fill("")]
+        : Array(fieldNames.length).fill("");
 
- // const imageModule = new ImageModule({
-   // getImage: function (tagValue) {
-     // return Buffer.from(
-       // tagValue.replace(/^data:image\/(png|jpg|jpeg);base64,/, ""),
-        //"base64"
-      //);
-    //},
-    //getSize: async function (imgBuffer) {
-     // const blob = new Blob([imgBuffer]);
-      //const dimensions = await imageSize(blob);
+      const dateIdx = fieldNames.indexOf("Date");
+      if (dateIdx !== -1 && !arr[dateIdx]) arr[dateIdx] = new Date().toISOString().split("T")[0];
 
-//      let { width, height } = dimensions;
-//
-//      const maxWidth = 600;
-//      const maxHeight = 800;
+      const trDateIdx = fieldNames.indexOf("TR Date");
+      if (trDateIdx !== -1 && !arr[trDateIdx]) arr[trDateIdx] = new Date().toISOString().split("T")[0];
 
-//      const widthRatio = maxWidth / width;
-//      const heightRatio = maxHeight / height;
-//      const ratio = Math.min(widthRatio, heightRatio, 1);
+      return arr;
+    }
+  } catch {}
+  const init = Array(fieldNames.length).fill("");
+  const dateIdx = fieldNames.indexOf("Date");
+  if (dateIdx !== -1) init[dateIdx] = new Date().toISOString().split("T")[0];
 
-//      return [width * ratio, height * ratio];
-//    },
-//  });
+  const trDateIdx = fieldNames.indexOf("TR Date");
+  if (trDateIdx !== -1) init[trDateIdx] = new Date().toISOString().split("T")[0];
+
+  return init;
+});
 
   const [images, setImages] = useState(() => {
     try {
@@ -200,12 +188,20 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     );
   };
 
-  const clearAll = () => {
-    if (window.confirm("Clear all fields and images?")) {
-      setFields(Array(fieldNames.length).fill(""));
-      setImages([]);
-    }
-  };
+ const clearAll = () => {
+  if (window.confirm("Clear all fields and images?")) {
+    const reset = Array(fieldNames.length).fill("");
+    const dateIdx = fieldNames.indexOf("Date");
+    if (dateIdx !== -1) reset[dateIdx] = new Date().toISOString().split("T")[0];
+
+    const trDateIdx = fieldNames.indexOf("TR Date");
+    if (trDateIdx !== -1) reset[trDateIdx] = new Date().toISOString().split("T")[0];
+
+    setFields(reset);
+    setImages([]);
+  }
+};
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -255,14 +251,20 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
         linebreaks: true,
       });
 
-      const data = {};
-      fieldNames.forEach((name, idx) => {
-        const key = name.replace(/\s+/g, "_");
-        data[key] =
-          name === "Code Images"
-            ? images[0] || null
-            : fields[idx] || "(empty)";
-      });
+
+      const placeholder =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAF/gL+vYz1AAAAAElFTkSuQmCC"; // 1x1 px transparent
+
+ const data = {};
+fieldNames.forEach((name, idx) => {
+  const key = name.replace(/\s+/g, "_");
+  if ((name === "Date" || name === "TR Date") && !fields[idx]) {
+    data[key] = new Date().toISOString().split("T")[0]; // default today
+  } else {
+    data[key] = name === "Code Images" ? images[0] || placeholder : fields[idx] || "(empty)";
+  }
+});
+
 
       await doc.renderAsync(data);
 

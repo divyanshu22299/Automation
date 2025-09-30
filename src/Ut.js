@@ -53,18 +53,22 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     const raw = localStorage.getItem("fs_fields_v3");
     if (raw) {
       const parsed = JSON.parse(raw);
-      return Array.isArray(parsed.fields)
+      const arr = Array.isArray(parsed.fields)
         ? [...parsed.fields.slice(0, fieldNames.length), ...Array(fieldNames.length - parsed.fields.length).fill("")]
         : Array(fieldNames.length).fill("");
+      const dateIdx = fieldNames.indexOf("Date");
+      if (dateIdx !== -1 && !arr[dateIdx]) {
+        arr[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default today
+      }
+      return arr;
     }
   } catch {}
   const init = Array(fieldNames.length).fill("");
   const dateIdx = fieldNames.indexOf("Date");
-  if (dateIdx !== -1) {
-    init[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default date
-  }
+  if (dateIdx !== -1) init[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default today
   return init;
 });
+
 
   const [beforeImages, setBeforeImages] = useState(() => {
     try {
@@ -188,15 +192,12 @@ const clearAll = () => {
   if (window.confirm("Clear all fields and images?")) {
     const reset = Array(fieldNames.length).fill("");
     const dateIdx = fieldNames.indexOf("Date");
-    if (dateIdx !== -1) {
-      reset[dateIdx] = new Date().toISOString().split("T")[0]; // set today’s date again
-    }
+    if (dateIdx !== -1) reset[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default today
     setFields(reset);
     setBeforeImages([]);
     setAfterImages([]);
   }
 };
-
 
   window.Buffer = require("buffer/").Buffer;
 
@@ -206,54 +207,56 @@ const clearAll = () => {
   };
 
   // ✅ Export Word with validation
-  const exportWord = async () => {
-    if (!beforeImages.length || !afterImages.length) {
-      setPopupMsg("Both 'Before screenshot' and 'After screenshot' images are required before exporting.");
-      setShowPopup(true);
-      return;
-    }
+ const exportWord = async () => {
+  // ✅ Use placeholder if images are missing
+  const placeholder =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAF/gL+vYz1AAAAAElFTkSuQmCC"; // 1x1 transparent
 
-    try {
-      const response = await fetch("/templateut.docx");
-      const arrayBuffer = await response.arrayBuffer();
-      const zip = new PizZip(arrayBuffer);
+  try {
+    const response = await fetch("/templateut.docx");
+    const arrayBuffer = await response.arrayBuffer();
+    const zip = new PizZip(arrayBuffer);
 
-      const imageModule = new ImageModule({
-        getImage: (tagValue) => {
-          if (!tagValue) return null;
-          const base64 = tagValue.split(",")[1];
-          return Buffer.from(base64, "base64");
-        },
-        getSize: (img, tagValue) =>
-          new Promise((resolve) => {
-            const image = new Image();
-            image.onload = () => {
-              let width = (image.width / 96) * 72;
-              let height = (image.height / 96) * 72;
-              const ratio = Math.min(700 / width, 900 / height, 1);
-              resolve([width * ratio, height * ratio]);
-            };
-            image.src = tagValue;
-          }),
-      });
+    const imageModule = new ImageModule({
+      getImage: (tagValue) => {
+        if (!tagValue) tagValue = placeholder;
+        const base64 = tagValue.split(",")[1];
+        return Buffer.from(base64, "base64");
+      },
+      getSize: (img, tagValue) =>
+        new Promise((resolve) => {
+          const image = new Image();
+          image.onload = () => {
+            let width = (image.width / 96) * 72;
+            let height = (image.height / 96) * 72;
+            const ratio = Math.min(700 / width, 900 / height, 1);
+            resolve([width * ratio, height * ratio]);
+          };
+          image.src = tagValue || placeholder;
+        }),
+    });
 
-      const doc = new Docxtemplater(zip, { modules: [imageModule], paragraphLoop: true, linebreaks: true });
+    const doc = new Docxtemplater(zip, {
+      modules: [imageModule],
+      paragraphLoop: true,
+      linebreaks: true,
+    });
 
-      const data = {};
-      fieldNames.forEach((name, idx) => (data[name] = fields[idx] || ""));
-      data["Before screenshot"] = beforeImages[0];
-      data["After screenshot"] = afterImages[0];
+    const data = {};
+    fieldNames.forEach((name, idx) => (data[name] = fields[idx] || ""));
+    data["Before screenshot"] = beforeImages[0] || placeholder;
+    data["After screenshot"] = afterImages[0] || placeholder;
 
-      await doc.renderAsync(data);
+    await doc.renderAsync(data);
 
-      const out = doc.getZip().generate({ type: "blob" });
-      saveAs(out, `${title.replace(/\s+/g, "_")}.docx`);
-    } catch (error) {
-      console.error("Error generating Word file:", error);
-      setPopupMsg("Failed to generate Word file. Please try again.");
-      setShowPopup(true);
-    }
-  };
+    const out = doc.getZip().generate({ type: "blob" });
+    saveAs(out, `${title.replace(/\s+/g, "_")}.docx`);
+  } catch (error) {
+    console.error("Error generating Word file:", error);
+    setPopupMsg("Failed to generate Word file. Please try again.");
+    setShowPopup(true);
+  }
+};
 
   const totalItems = fields.length + beforeImages.length + afterImages.length;
   const filledCount = fields.filter((f) => f.trim() !== "").length + beforeImages.length + afterImages.length;
