@@ -14,7 +14,6 @@ import { saveAs } from "file-saver";
 import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import ImageModule from "docxtemplater-image-module-free";
-import imageSize from "browser-image-size";
 import "./Fs.css";
 window.Buffer = require("buffer/").Buffer;
 
