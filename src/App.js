@@ -4,7 +4,6 @@ import "./App.css";
 import Fs from "./Fs";
 import Ut from "./Ut";
 import Ts from "./Ts";
-import Layout from "./Layout";
 
 
 document.documentElement.style.scrollBehavior = "smooth";
@@ -19,29 +18,28 @@ function Home({ darkMode, setDarkMode }) {
   const navigate = useNavigate();
 
   // Intersection Observer
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("visible");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    observerRef.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      observerRef.current.forEach((el) => {
-        if (el) observer.unobserve(el);
+// Intersection Observer
+useEffect(() => {
+  const currentElements = observerRef.current.filter(Boolean); // copy refs and remove nulls
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+          observer.unobserve(entry.target);
+        }
       });
-    };
-  }, []);
+    },
+    { threshold: 0.1 }
+  );
+
+  // Use currentElements instead of observerRef.current
+  currentElements.forEach((el) => observer.observe(el));
+
+  return () => {
+    currentElements.forEach((el) => observer.unobserve(el));
+  };
+}, []);
 
   // Parallax effect for hero title
   useEffect(() => {
