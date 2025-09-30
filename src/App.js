@@ -12,7 +12,7 @@ document.documentElement.style.scrollBehavior = "smooth";
 
 
 function Home({ darkMode, setDarkMode }) {
-  const fullTitle = "Seamless Office Automation";
+  const fullTitle = " Novel Doc. Automation";
   const heroTitleRef = useRef(null);
   const observerRef = useRef([]);
   const navigate = useNavigate();
@@ -94,10 +94,9 @@ useEffect(() => {
             {fullTitle}
           </h2>
           <p className="hero-subtitle">
-            Generate and manage Functional Specs, Unit Tests, and Technical
+            Generate Functional Specs, Unit Tests, and Technical
             Specs — all in one place.
           </p>
-          <button className="hero-btn">Get Started</button>
         </div>
       </section>
 
@@ -111,9 +110,9 @@ useEffect(() => {
         <div className="steps-container">
           <div className="step-card" ref={(el) => (observerRef.current[1] = el)}>
             <div className="step-icon">1</div>
-            <h3>Describe Your Task</h3>
+            <h3>Enter Your Details</h3>
             <p>
-              Simply provide a high-level description of what you need to
+              Provide description of what you need to
               document. Our tool takes it from there.
             </p>
           </div>
@@ -121,16 +120,16 @@ useEffect(() => {
             <div className="step-icon">2</div>
             <h3>Generate Documents</h3>
             <p>
-              Our AI processes your input and generates detailed, structured
+              Our Tool processes your input and generates detailed, structured
               Functional Specs, Unit Tests, or Technical Specs.
             </p>
           </div>
           <div className="step-card" ref={(el) => (observerRef.current[3] = el)}>
             <div className="step-icon">3</div>
-            <h3>Review and Export</h3>
+            <h3>Review and Use</h3>
             <p>
-              Review the generated documents, make any final edits, and export
-              them in your preferred format. It's that easy!
+              Review the generated documents, make any final edits, and Use
+              them. It's that easy!
             </p>
           </div>
         </div>
@@ -146,7 +145,7 @@ useEffect(() => {
             ref={(el) => (observerRef.current[4] = el)}
           >
             <h3>Create FS</h3>
-            <p>Generate Functional Specifications effortlessly.</p>
+            <p>Generate Functional Specifications.</p>
             <button onClick={() => navigate("/fs")}>Start</button>
           </div>
           <div
@@ -173,7 +172,7 @@ useEffect(() => {
       {/* Footer */}
       <footer className="footer">
         <p className="footer-text">
-          © 2025 Automation Tool | Designed By Divyanshu
+          © 2025 Automation Tool | Designed By Divyanshu Singh
         </p>
       </footer>
     </div>
