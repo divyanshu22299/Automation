@@ -56,29 +56,29 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     return Array(fieldNames.length).fill("");
   });
 
-  const imageModule = new ImageModule({
-    getImage: function (tagValue) {
-      return Buffer.from(
-        tagValue.replace(/^data:image\/(png|jpg|jpeg);base64,/, ""),
-        "base64"
-      );
-    },
-    getSize: async function (imgBuffer) {
-      const blob = new Blob([imgBuffer]);
-      const dimensions = await imageSize(blob);
+ // const imageModule = new ImageModule({
+   // getImage: function (tagValue) {
+     // return Buffer.from(
+       // tagValue.replace(/^data:image\/(png|jpg|jpeg);base64,/, ""),
+        //"base64"
+      //);
+    //},
+    //getSize: async function (imgBuffer) {
+     // const blob = new Blob([imgBuffer]);
+      //const dimensions = await imageSize(blob);
 
-      let { width, height } = dimensions;
+//      let { width, height } = dimensions;
+//
+//      const maxWidth = 600;
+//      const maxHeight = 800;
 
-      const maxWidth = 600;
-      const maxHeight = 800;
+//      const widthRatio = maxWidth / width;
+//      const heightRatio = maxHeight / height;
+//      const ratio = Math.min(widthRatio, heightRatio, 1);
 
-      const widthRatio = maxWidth / width;
-      const heightRatio = maxHeight / height;
-      const ratio = Math.min(widthRatio, heightRatio, 1);
-
-      return [width * ratio, height * ratio];
-    },
-  });
+//      return [width * ratio, height * ratio];
+//    },
+//  });
 
   const [images, setImages] = useState(() => {
     try {
