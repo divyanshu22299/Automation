@@ -173,7 +173,7 @@ useEffect(() => {
       {/* Footer */}
       <footer className="footer">
         <p className="footer-text">
-          © 2025 Automation Tool | Designed for Professionals
+          © 2025 Automation Tool | Designed By Divyanshu
         </p>
       </footer>
     </div>
