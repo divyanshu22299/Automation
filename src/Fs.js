@@ -191,7 +191,7 @@ const exportWord = async () => {
     const zip = new PizZip(arrayBuffer);
 
     const placeholder =
-      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAF/gL+vYz1AAAAAElFTkSuQmCC"; // 1x1 transparent
+      "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAF/gL+vYz1AAAAAElFTkSuQmCC";
 
     const imageModule = new ImageModule({
       getImage: (tagValue) => {
@@ -218,14 +218,13 @@ const exportWord = async () => {
       linebreaks: true,
     });
 
-    const data = {};
-    fieldNames.forEach((name, idx) => {
-      data[name] = fields[idx] || "";
-    });
+   const data = {};
+fieldNames.forEach((name, idx) => (data[name] = fields[idx] || ""));
 
-    // Use placeholder if no image
-    data["Screenshot 1"] = beforeImages[0] || placeholder;
-    data["Screenshot 2"] = afterImages[0] || placeholder;
+// ✅ same style as working FS page
+data["Screenshot 1"] = beforeImages[0] || placeholder;
+data["Screenshot 2"] = afterImages[0] || placeholder;
+
 
     await doc.renderAsync(data);
 
