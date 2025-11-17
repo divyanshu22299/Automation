@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
-  FaMoon,
-  FaSun,
-  FaSave,
   FaFileExport,
-  FaClipboard,
   FaRegFileAlt,
   FaTrash,
+  FaDownload,
+  FaPlus,
+  FaClipboard,
 } from "react-icons/fa";
 import { saveAs } from "file-saver";
 import PizZip from "pizzip";
@@ -16,24 +14,9 @@ import Docxtemplater from "docxtemplater";
 import "./Fs.css";
 import ImageModule from "docxtemplater-image-module-free";
 
-
-// ✅ Custom Popup Component
-function Popup({ message, onClose }) {
-  return (
-    <div className="popup-overlay">
-      <div className="popup-box">
-        <h3>⚠️ Missing Images</h3>
-        <p>{message}</p>
-        <button onClick={onClose} className="popup-btn">OK</button>
-      </div>
-    </div>
-  );
-}
-
-export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
+export default function Fs() {
   const navigate = useNavigate();
   const [title, setTitle] = useState("Unit Testing");
-
 
   const fieldNames = [
     "Client name",
@@ -41,7 +24,7 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     "ABAPer name",
     "Module",
     "Date",
-    "Type of development",
+    "RICEFW typed",
     "Description",
     "Complexity of Object",
     "Program Name",
@@ -49,50 +32,14 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
   ];
 
   const [fields, setFields] = useState(() => {
-  try {
-    localStorage.removeItem("fs_fields_v3");
-
-  } catch {}
-  const init = Array(fieldNames.length).fill("");
-  const dateIdx = fieldNames.indexOf("Date");
-  if (dateIdx !== -1) init[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default today
-  return init;
-});
-
-
-  const [beforeImages, setBeforeImages] = useState(() => {
-    try {
-      const raw = localStorage.getItem("fs_before_images");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
+    const init = Array(fieldNames.length).fill("");
+    const dateIdx = fieldNames.indexOf("Date");
+    if (dateIdx !== -1) init[dateIdx] = new Date().toISOString().split("T")[0];
+    return init;
   });
 
-  const [afterImages, setAfterImages] = useState(() => {
-    try {
-      const raw = localStorage.getItem("fs_after_images");
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  const [saving, setSaving] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [popupMsg, setPopupMsg] = useState("");
-  
-
-  useEffect(() => {
-    setSaving(true);
-    const id = setTimeout(() => {
-      localStorage.setItem("fs_fields_v3", JSON.stringify({ title, fields }));
-      localStorage.setItem("fs_before_images", JSON.stringify(beforeImages));
-      localStorage.setItem("fs_after_images", JSON.stringify(afterImages));
-      setSaving(false);
-    }, 600);
-    return () => clearTimeout(id);
-  }, [fields, title, beforeImages, afterImages]);
+  const [beforeImages, setBeforeImages] = useState([]);
+  const [afterImages, setAfterImages] = useState([]);
 
   const handleFieldChange = (idx, value) => {
     setFields((prev) => {
@@ -134,291 +81,351 @@ export default function Fs({ darkMode, setDarkMode }) {  // receive from App.js
     if (type === "after") setAfterImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const exportJSON = () => {
-    const payload = { title, date: new Date().toISOString(), details: fields, beforeImages, afterImages };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
-    saveAs(blob, `${(title || "functional_spec").replace(/\s+/g, "_")}.json`);
-  };
-
-  const exportMarkdown = () => {
-    let md = `# ${title}\n\n`;
-    fields.forEach((f, i) => {
-      md += `## ${fieldNames[i]}\n\n${f || "_(empty)_"}\n\n`;
-    });
-    md += "## Before screenshot\n\n";
-    beforeImages.length ? beforeImages.forEach((img, idx) => (md += `![Before ${idx + 1}](${img})\n\n`)) : (md += "_(no images)_\n\n");
-    md += "## After screenshot\n\n";
-    afterImages.length ? afterImages.forEach((img, idx) => (md += `![After ${idx + 1}](${img})\n\n`)) : (md += "_(no images)_\n\n");
-
-    const blob = new Blob([md], { type: "text/markdown" });
-    saveAs(blob, `${(title || "functional_spec").replace(/\s+/g, "_")}.md`);
-  };
-
-  const copyMarkdown = async () => {
-    let md = `# ${title}\n\n`;
-    fields.forEach((f, i) => {
-      md += `## ${fieldNames[i]}\n\n${f || "_(empty)_"}\n\n`;
-    });
-    md += "## Before screenshot\n\n";
-    beforeImages.length ? beforeImages.forEach((img, idx) => (md += `![Before ${idx + 1}](${img})\n\n`)) : (md += "_(no images)_\n\n");
-    md += "## After screenshot\n\n";
-    afterImages.length ? afterImages.forEach((img, idx) => (md += `![After ${idx + 1}](${img})\n\n`)) : (md += "_(no images)_\n\n");
-
-    try {
-      await navigator.clipboard.writeText(md);
-      setPopupMsg("Markdown copied to clipboard!");
-      setShowPopup(true);
-    } catch (e) {
-      setPopupMsg("Copy failed — your browser may block clipboard access");
-      setShowPopup(true);
-    }
-  };
-
   const fillSample = () => {
     setFields((prev) => prev.map((v, i) => v || `Sample ${fieldNames[i]}`));
   };
 
-const clearAll = () => {
-  if (window.confirm("Clear all fields and images?")) {
-    const reset = Array(fieldNames.length).fill("");
-    const dateIdx = fieldNames.indexOf("Date");
-    if (dateIdx !== -1) reset[dateIdx] = new Date().toISOString().split("T")[0]; // ✅ default today
-    setFields(reset);
-    setBeforeImages([]);
-    setAfterImages([]);
-  }
-};
+  const clearAll = () => {
+    if (window.confirm("Clear all fields and images?")) {
+      setFields(Array(fieldNames.length).fill(""));
+      setBeforeImages([]);
+      setAfterImages([]);
+    }
+  };
 
   window.Buffer = require("buffer/").Buffer;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("Spec saved locally. Use Export to download.");
+  const exportWord = async () => {
+    try {
+      const response = await fetch("/templateut.docx");
+      const arrayBuffer = await response.arrayBuffer();
+      const zip = new PizZip(arrayBuffer);
+
+      const placeholder =
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAF/gL+vYz1AAAAAElFTkSuQmCC";
+
+      const imageModule = new ImageModule({
+        getImage: (tagValue) => {
+          if (!tagValue) tagValue = placeholder;
+          const base64 = tagValue.split(",")[1];
+          return Buffer.from(base64, "base64");
+        },
+        getSize: (img, tagValue) =>
+          new Promise((resolve) => {
+            const image = new Image();
+            image.onload = () => {
+              let width = (image.width / 96) * 72;
+              let height = (image.height / 96) * 72;
+              const ratio = Math.min(700 / width, 900 / height, 1);
+              resolve([width * ratio, height * ratio]);
+            };
+            image.src = tagValue || placeholder;
+          }),
+      });
+
+      const doc = new Docxtemplater(zip, {
+        modules: [imageModule],
+        paragraphLoop: true,
+        linebreaks: true,
+      });
+
+      const data = {};
+      fieldNames.forEach((name, idx) => (data[name] = fields[idx] || ""));
+
+      data["Before screenshot"] = beforeImages[0] || placeholder;
+      data["After screenshot"] = afterImages[0] || placeholder;
+
+      await doc.renderAsync(data);
+
+      const out = doc.getZip().generate({ type: "blob" });
+      saveAs(out, `${title.replace(/\s+/g, "_")}.docx`);
+    } catch (error) {
+      console.error("Error generating Word file:", error);
+      alert("Failed to generate Word file. Check console for details.");
+    }
   };
-
-  // ✅ Export Word with validation
- const exportWord = async () => {
-  // ✅ Use placeholder if images are missing
-  const placeholder =
-    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HwAF/gL+vYz1AAAAAElFTkSuQmCC"; // 1x1 transparent
-
-  try {
-    const response = await fetch("/templateut.docx");
-    const arrayBuffer = await response.arrayBuffer();
-    const zip = new PizZip(arrayBuffer);
-
-    const imageModule = new ImageModule({
-      getImage: (tagValue) => {
-        if (!tagValue) tagValue = placeholder;
-        const base64 = tagValue.split(",")[1];
-        return Buffer.from(base64, "base64");
-      },
-      getSize: (img, tagValue) =>
-        new Promise((resolve) => {
-          const image = new Image();
-          image.onload = () => {
-            let width = (image.width / 96) * 72;
-            let height = (image.height / 96) * 72;
-            const ratio = Math.min(700 / width, 900 / height, 1);
-            resolve([width * ratio, height * ratio]);
-          };
-          image.src = tagValue || placeholder;
-        }),
-    });
-
-    const doc = new Docxtemplater(zip, {
-      modules: [imageModule],
-      paragraphLoop: true,
-      linebreaks: true,
-    });
-
-    const data = {};
-    fieldNames.forEach((name, idx) => (data[name] = fields[idx] || ""));
-    data["Before screenshot"] = beforeImages[0] || placeholder;
-    data["After screenshot"] = afterImages[0] || placeholder;
-
-    await doc.renderAsync(data);
-
-    const out = doc.getZip().generate({ type: "blob" });
-    saveAs(out, `${title.replace(/\s+/g, "_")}.docx`);
-  } catch (error) {
-    console.error("Error generating Word file:", error);
-    setPopupMsg("Failed to generate Word file. Please try again.");
-    setShowPopup(true);
-  }
-};
 
   const totalItems = fields.length + beforeImages.length + afterImages.length;
   const filledCount = fields.filter((f) => f.trim() !== "").length + beforeImages.length + afterImages.length;
   const progress = Math.round((filledCount / totalItems) * 100);
 
+  // Dropdown options
+  const moduleOptions = ["SD", "MM", "PP", "QM", "PM", "FICO"];
+  const ricefwOptions = [
+    "Module Pool",
+    "API/O Data/IDOC",
+    "Enhancement/Velidation",
+    "Report",
+    "Adobe/Smart Form",
+    "Workflows",
+    "Configuration",
+    "Basis Activity",
+    "Consulting",
+    "UI5/Fiori"
+  ];
+  const complexityOptions = ["Level 1", "Level 2", "Level 3", "Level 4"];
+
   return (
-    <div className={`fs-page${darkMode ? " dark" : ""}`}>
+    <div className="fs-container">
+      {/* Header */}
       <header className="fs-header">
-        <div>
-          <button className="btn-icon" onClick={() => navigate("/")}>🔙 Back</button>
-        </div>
-        <div>
-          <h1>{title}</h1>
-          <div className="subtitle">Create, preview & export your Unit Testing specs</div>
-        </div>
-        <div className="actions">
-          <input placeholder="Search..." />
-          <button className="btn-icon" onClick={() => setDarkMode(!darkMode)}>
-            {darkMode ? <FaSun className="icon-anim" /> : <FaMoon className="icon-anim" />}{" "}
-            {darkMode ? "Light" : "Dark"}
+        <div className="header-left">
+          <button className="back-btn" onClick={() => navigate("/")}>
+            <FaDownload /> Back to Home
           </button>
+        </div>
+        <div className="header-center">
+          <h1>{title}</h1>
+          <p>Unit Testing Generator</p>
+        </div>
+        <div className="header-right">
+          <div className="progress-indicator">
+            <span className="progress-text">{progress}% Complete</span>
+            <div className="progress-ring">
+              <svg width="40" height="40">
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="#e9ecef"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="16"
+                  stroke="#5e72e4"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray={`${2 * Math.PI * 16}`}
+                  strokeDashoffset={`${2 * Math.PI * 16 * (1 - progress / 100)}`}
+                  transform="rotate(-90 20 20)"
+                  className="progress-circle"
+                />
+              </svg>
+            </div>
+          </div>
         </div>
       </header>
 
+      {/* Main Content */}
       <main className="fs-main">
-        <section className="fs-section">
-          <div className="flex justify-between mb-4">
-            <h2>Spec Details</h2>
-            <div>{saving ? "Saving..." : "Saved"}</div>
+        {/* Left Panel - Form */}
+        <section className="form-panel">
+          <div className="panel-header">
+            <h2>Specification Details</h2>
+            <div className="panel-actions">
+              <button className="action-btn secondary" onClick={fillSample}>
+                <FaRegFileAlt /> Fill Sample
+              </button>
+              <button className="action-btn danger" onClick={clearAll}>
+                <FaTrash /> Clear All
+              </button>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="fs-field">
+          <div className="form-content">
+            <div className="title-section">
               <input
+                type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Unit Testing"
-                style={{
-                  fontSize: "32px",
-                  fontWeight: "700",
-                  padding: "12px 16px",
-                  width: "100%",
-                  border: "none",
-                  borderBottom: "2px solid #6366f1",
-                  outline: "none",
-                  marginBottom: "20px",
-                  backgroundColor: "transparent",
-                }}
+                placeholder="Enter specification title..."
+                className="title-input"
               />
             </div>
 
-            {fields.map((f, idx) => (
-              <div key={idx} className="fs-field">
-                <label className="field-label">{fieldNames[idx]}</label>
+            <div className="fields-grid">
+              {fields.map((f, idx) => (
+                <div key={idx} className="field-group">
+                  <label className="field-label">{fieldNames[idx]}</label>
 
-                {fieldNames[idx] === "Date" ? (
-  <input
-    type="date"
-    value={f}
-    onChange={(e) => handleFieldChange(idx, e.target.value)}
-  />
-) : fieldNames[idx] === "Complexity of Object" ? (
-  <select
-    value={f}
-    onChange={(e) => handleFieldChange(idx, e.target.value)}
-  >
-    <option value="">Select</option>
-    <option value="Low">Low</option>
-    <option value="Medium">Medium</option>
-    <option value="High">High</option>
-  </select>
-) : (
-  <input
-    value={f}
-    onChange={(e) => handleFieldChange(idx, e.target.value)}
-    placeholder={fieldNames[idx]}
-  />
-)}
+                  {fieldNames[idx] === "Date" ? (
+                    <input
+                      type="date"
+                      value={f || new Date().toISOString().split("T")[0]}
+                      onChange={(e) => handleFieldChange(idx, e.target.value)}
+                      className="field-input"
+                    />
+                  ) : fieldNames[idx] === "Module" ? (
+                    <select
+                      value={f}
+                      onChange={(e) => handleFieldChange(idx, e.target.value)}
+                      className="field-select"
+                    >
+                      <option value="">Select Module</option>
+                      {moduleOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : fieldNames[idx] === "RICEFW typed" ? (
+                    <select
+                      value={f}
+                      onChange={(e) => handleFieldChange(idx, e.target.value)}
+                      className="field-select"
+                    >
+                      <option value="">Select RICEFW Type</option>
+                      {ricefwOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : fieldNames[idx] === "Complexity of Object" ? (
+                    <select
+                      value={f}
+                      onChange={(e) => handleFieldChange(idx, e.target.value)}
+                      className="field-select"
+                    >
+                      <option value="">Select Complexity</option>
+                      {complexityOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </select>
+                  ) : fieldNames[idx] === "Description" || fieldNames[idx] === "Change description" ? (
+                    <textarea
+                      value={f}
+                      onChange={(e) => handleFieldChange(idx, e.target.value)}
+                      placeholder={`Enter ${fieldNames[idx].toLowerCase()}...`}
+                      className="field-textarea"
+                      rows="4"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={f}
+                      onChange={(e) => handleFieldChange(idx, e.target.value)}
+                      placeholder={fieldNames[idx]}
+                      className="field-input"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
 
-              </div>
-            ))}
-
-            {["before", "after"].map((type) => (
-              <div key={type} className="fs-field">
-                <label>
-                  {type === "before" ? "Before screenshot" : "After screenshot"}{" "}
-                  <span style={{ color: "red" }}>*</span>
-                </label>
-                <div
-                  className="image-upload"
-                  contentEditable
-                  suppressContentEditableWarning
-                  onPaste={(e) => handlePasteImage(e, type)}
-                  onKeyDown={(e) => {
-                    if (!((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v")) e.preventDefault();
-                  }}
-                  style={{
-                    border: "1px dashed #aaa",
-                    padding: "8px",
-                    minHeight: "80px",
-                    cursor: "text",
-                    position: "relative",
-                  }}
-                >
-                  <div style={{ position: "absolute", top: "8px", left: "8px", color: "#888", fontStyle: "italic", pointerEvents: "none" }}>
-                    Click here and paste (Ctrl+V) or upload an image
+            {/* Image Upload Sections */}
+            <div className="image-sections">
+              {["before", "after"].map((type) => (
+                <div key={type} className="image-section">
+                  <div className="image-header">
+                    <h3>
+                      {type === "before" ? "Before Implementation" : "After Implementation"}
+                    </h3>
+                    <span className="image-count">
+                      {type === "before" ? beforeImages.length : afterImages.length} images
+                    </span>
                   </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={(e) => handleImageUpload(e.target.files, type)}
-                    style={{ display: "block", marginTop: "30px" }}
-                  />
-                  <div className="image-preview-list">
+                  
+                  <div
+                    className="image-drop-zone"
+                    onPaste={(e) => handlePasteImage(e, type)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleImageUpload(e.dataTransfer.files, type);
+                    }}
+                  >
+                    <div className="drop-zone-content">
+                      <FaPlus className="drop-icon" />
+                      <p>Drag & drop images here or paste (Ctrl+V)</p>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={(e) => handleImageUpload(e.target.files, type)}
+                        className="file-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="image-gallery">
                     {(type === "before" ? beforeImages : afterImages).map((img, i) => (
-                      <div key={i} className="image-item">
-                        <img src={img} alt={`${type}-${i}`} style={{ maxWidth: "120px", margin: "5px" }} />
-                        <button type="button" onClick={() => removeImage(i, type)}>
-                          <FaTrash /> Remove
+                      <div key={i} className="image-card">
+                        <img src={img} alt={`${type}-${i}`} />
+                        <button
+                          className="remove-image"
+                          onClick={() => removeImage(i, type)}
+                        >
+                          <FaTrash />
                         </button>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
-            ))}
-
-            <div className="fs-buttons">
-              <button type="button" className="btn-icon" onClick={fillSample}><FaRegFileAlt className="icon-anim" /> Fill Sample</button>
-              <button type="button" className="btn-icon btn-danger" onClick={clearAll}>❌ Clear All</button>
-              <button type="submit" className="btn-icon"><FaSave className="icon-anim" /> Save</button>
-              <button type="button" className="btn-icon" onClick={exportJSON}><FaFileExport className="icon-anim" /> Export JSON</button>
-              <button type="button" className="btn-icon" onClick={exportMarkdown}><FaRegFileAlt className="icon-anim" /> Export MD</button>
-              <button type="button" className="btn-icon" onClick={copyMarkdown}><FaClipboard className="icon-anim" /> Copy MD</button>
-              <button type="button" className="btn-icon" onClick={exportWord}><FaFileExport className="icon-anim" /> Export Word</button>
+              ))}
             </div>
-          </form>
+
+            {/* Export Button */}
+            <div className="export-section">
+              <button className="export-btn" onClick={exportWord}>
+                <FaFileExport /> Export to Word Document
+              </button>
+            </div>
+          </div>
         </section>
 
-        <aside className="fs-preview">
-          <div className="flex justify-between mb-4">
+        {/* Right Panel - Preview */}
+        <section className="preview-panel">
+          <div className="panel-header">
             <h2>Live Preview</h2>
-            <div>{fields.length + beforeImages.length + afterImages.length} items</div>
+            <span className="item-count">{totalItems} items</span>
           </div>
 
-          <div className="progress-container">
-            <div className="progress-bar" style={{ width: `${progress}%` }}></div>
-          </div>
-          <div className="progress-text">{progress}% filled</div>
+          <div className="preview-content">
+            <div className="preview-header">
+              <h3>{title}</h3>
+              <div className="preview-meta">
+                <span>Generated on: {new Date().toLocaleDateString()}</span>
+              </div>
+            </div>
 
-          <div>
-            <h3>{title}</h3>
-            <ol>
-              {fields.map((f, i) => <li key={i}>{f || <em>No description</em>}</li>)}
-              <li>
-                <strong>Before screenshot:</strong>{" "}
-                {beforeImages.length ? beforeImages.map((img, idx) => <img key={idx} src={img} alt={`before-${idx}`} style={{ maxWidth: "100px" }} />) : <em>No images</em>}
-              </li>
-              <li>
-                <strong>After screenshot:</strong>{" "}
-                {afterImages.length ? afterImages.map((img, idx) => <img key={idx} src={img} alt={`after-${idx}`} style={{ maxWidth: "100px" }} />) : <em>No images</em>}
-              </li>
-            </ol>
+            <div className="preview-details">
+              {fields.map((f, i) => (
+                f && (
+                  <div key={i} className="preview-item">
+                    <strong>{fieldNames[i]}:</strong>
+                    <span>{f}</span>
+                  </div>
+                )
+              ))}
+            </div>
+
+            <div className="preview-images">
+              {beforeImages.length > 0 && (
+                <div className="preview-image-group">
+                  <h4>Before Implementation</h4>
+                  <div className="preview-image-grid">
+                    {beforeImages.map((img, idx) => (
+                      <img key={idx} src={img} alt={`before-${idx}`} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {afterImages.length > 0 && (
+                <div className="preview-image-group">
+                  <h4>After Implementation</h4>
+                  <div className="preview-image-grid">
+                    {afterImages.map((img, idx) => (
+                      <img key={idx} src={img} alt={`after-${idx}`} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </aside>
+        </section>
       </main>
 
-      <footer className="fs-footer">© 2025 Automation Tool</footer>
-
-      {/* ✅ Custom React Popup */}
-      {showPopup && <Popup message={popupMsg} onClose={() => setShowPopup(false)} />}
+      {/* Footer */}
+      <footer className="fs-footer">
+        <p>© 2025 DocAI | Designed By Divyanshu Singh Chouhan</p>
+      </footer>
     </div>
   );
 }
