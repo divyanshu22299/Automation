@@ -6,7 +6,6 @@ import {
   FaTrash,
   FaDownload,
   FaPlus,
-  FaClipboard,
 } from "react-icons/fa";
 import { saveAs } from "file-saver";
 import PizZip from "pizzip";

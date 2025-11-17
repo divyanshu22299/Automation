@@ -114,7 +114,7 @@ function Home() {
             Intelligent Documentation Automation
           </h2>
           <p className={`hero-description ${descriptionVisible ? 'visible' : ''}`}>
-            Generate Functional Specs, Unit Tests, and Technical Specifications with cutting-edge AI technology.
+            Generate Functional Specs, Unit Tests, and Technical Specifications effortlessly.
           </p>
           <div className={`hero-buttons ${buttonsVisible ? 'visible' : ''}`}>
             <button onClick={() => navigate("/fs")} className="hero-btn primary">Get Started</button>
@@ -284,7 +284,7 @@ function Home() {
             </div>
             <div className="footer-column">
               <h4>Resources</h4>
-              <a href="#" onClick={(e) => { e.preventDefault(); setShowContactModal(true); }}>Contact</a>
+              <a href="#contacts" onClick={(e) => { e.preventDefault(); setShowContactModal(true); }}>Contact</a>
               <a href="#how-it-works">How It Works</a>
             </div>
           </div>
